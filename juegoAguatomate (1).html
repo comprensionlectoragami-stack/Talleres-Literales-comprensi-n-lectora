@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultiva el Tomate - Parqués Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* PANTALLA DE INFROGRAFÍA/LECTURA */
+        #readingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #f1f8e9 0%, #dcedc8 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .reading-card {
+            max-width: 800px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            margin-top: 20px;
+            height: fit-content;
+            border-top: 8px solid #4caf50;
+        }
+
+        .reading-title {
+            font-size: 2.2em;
+            color: #2e7d32;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .infographic-steps {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            background: #f9fbe7;
+            border-radius: 12px;
+            border-left: 5px solid #8bc34a;
+        }
+
+        .step-number {
+            background: #4caf50;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #33691e;
+        }
+
+        .highlight-box {
+            background: #fff9c4;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 2px solid #fbc02d;
+            font-size: 1.1em;
+            color: #5d4037;
+        }
+
+        .start-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(76,175,80,0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            background: #45a049;
+            box-shadow: 0 12px 35px rgba(76,175,80,0.6);
+        }
+
+        /* JUEGO */
+        #gameScreen {
+            display: none;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .game-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 1.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .turn-badge {
+            display: inline-block;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .turn-badge.p1 { background: #4caf50; border: 3px solid #81c784; } /* Verde */
+        .turn-badge.p2 { background: #f44336; border: 3px solid #e57373; } /* Rojo */
+
+        /* LAYOUT PRINCIPAL */
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* PANELES LATERALES */
+        .player-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .player-panel.active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .player-panel.winner {
+            animation: winnerPulse 2s infinite;
+            border: 4px solid #ffd700;
+        }
+
+        @keyframes winnerPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,215,0,0.9); }
+        }
+
+        .player-panel.p1 { border-top: 5px solid #4caf50; }
+        .player-panel.p2 { border-top: 5px solid #f44336; }
+
+        .panel-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .panel-title.p1 { color: #4caf50; }
+        .panel-title.p2 { color: #f44336; }
+
+        .big-token {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 4px solid white;
+        }
+
+        .big-token.p1 { background: radial-gradient(circle at 30% 30%, #81c784, #4caf50); }
+        .big-token.p2 { background: radial-gradient(circle at 30% 30%, #ef5350, #d32f2f); }
+
+        .player-status {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* TABLERO CENTRAL */
+        .board-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(13, 50px);
+            grid-template-rows: repeat(13, 50px);
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 1px solid #e0e0e0;
+            font-size: 0.75em;
+        }
+
+        /* Zonas de inicio */
+        .start-zone {
+            grid-column: span 4;
+            grid-row: span 4;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1em;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .start-zone.p1 { background: #4caf50; grid-area: 1 / 1 / 5 / 5; }
+        .start-zone.p2 { background: #f44336; grid-area: 10 / 10 / 14 / 14; }
+
+        /* Camino */
+        .path {
+            border: 2px solid #bdbdbd;
+        }
+
+        .path.p1 { background: #e8f5e9; border-color: #4caf50; }
+        .path.p2 { background: #ffebee; border-color: #f44336; }
+        .path.neutral { background: #f5f5f5; }
+
+        .safe {
+            background: #fff9c4 !important;
+            border: 3px solid #fbc02d;
+            box-shadow: inset 0 0 8px rgba(251, 192, 45, 0.4);
+        }
+
+        .safe::after {
+            content: "🍃";
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 12px;
+        }
+
+        /* CELDA META - DESTACADA */
+        .meta-cell {
+            background: linear-gradient(135deg, #ffd700 0%, #ffab00 100%) !important;
+            border: 3px solid #ff6f00 !important;
+            box-shadow: inset 0 0 15px rgba(255, 111, 0, 0.6);
+            font-weight: bold;
+            font-size: 0.65em;
+            color: #333;
+            text-align: center;
+            line-height: 1.2;
+            overflow: hidden;
+        }
+
+        .meta-cell::before {
+            content: "🏆";
+            font-size: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            opacity: 0.3;
+        }
+
+        .meta-cell .meta-text {
+            position: relative;
+            z-index: 2;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Centro - Dados */
+        .center-area {
+            grid-area: 6 / 6 / 8 / 8;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #ff9800;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .dice-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .die {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ff9800;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+
+        .die.rolling {
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+
+        .roll-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .roll-btn:hover:not(:disabled) {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .roll-btn:disabled {
+            background: #bdbdbd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .dice-total {
+            margin-top: 6px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .dice-total span {
+            color: #ff9800;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        /* FICHAS EN EL TABLERO (Emojis de tomates) */
+        .token {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 3px solid white;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            transition: all 0.3s ease;
+        }
+
+        .token.moving {
+            z-index: 100;
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* PANTALLA DE VICTORIA */
+        #victoryScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .victory-card {
+            background: white;
+            padding: 50px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.6s ease-out;
+            border: 5px solid #ffd700;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .victory-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .victory-title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .winner-name {
+            font-size: 2em;
+            padding: 15px 30px;
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 20px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .winner-name.p1 { background: linear-gradient(135deg, #4caf50, #2e7d32); }
+        .winner-name.p2 { background: linear-gradient(135deg, #f44336, #c62828); }
+
+        .victory-message {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .restart-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(255,152,0,0.4);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255,152,0,0.6);
+            background: #f57c00;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* MODAL PREGUNTAS */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: white;
+            max-width: 700px;
+            width: 100%;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            color: #4caf50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .question-box {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4caf50;
+            font-size: 1.15em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.05em;
+            transition: all 0.2s;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            transform: translateX(5px);
+        }
+
+        .option-letter {
+            position: absolute;
+            left: 18px;
+            font-weight: bold;
+            color: #4caf50;
+            font-size: 1.1em;
+        }
+
+        .option-btn.correct {
+            background: #c8e6c9;
+            border-color: #4caf50;
+        }
+
+        .option-btn.wrong {
+            background: #ffcdd2;
+            border-color: #f44336;
+        }
+
+        .option-btn.disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 10px;
+            display: none;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+
+        .feedback.error {
+            background: #ffcdd2;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .continue-btn.show {
+            display: block;
+        }
+
+        /* TOASTS */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 600;
+        }
+
+        .toast {
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+            font-size: 0.95em;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 900px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            .board {
+                grid-template-columns: repeat(13, 35px);
+                grid-template-rows: repeat(13, 35px);
+            }
+            .cell { width: 35px; height: 35px; }
+            .token { width: 28px; height: 28px; font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INFROGRAFÍA INICIAL -->
+    <div id="readingScreen">
+        <div class="reading-card">
+            <h1 class="reading-title">🍅 Cómo Cultivar Tomate en Casa</h1>
+            
+            <div class="infographic-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>Corta las rodajas:</strong> Corta rodajas de tomate de <strong>medio centímetro de grosor</strong> (0.5 cm). Asegúrate de incluir las semillas visibles.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>Prepara la maceta:</strong> Usa una maceta <strong>profunda</strong> llena hasta la mitad con tierra de buena calidad.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>Coloca las rodajas:</strong> Pon las rodajas en la tierra <strong>separadas una de la otra</strong> para evitar competencia entre plantas.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>Cubre con tierra:</strong> Cubre las rodajas con aproximadamente <strong>medio centímetro de tierra</strong> adicional.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <strong>Riega suavemente:</strong> Usa un <strong>atomizador</strong> para humedecer la tierra sin chorros fuertes que desplacen las semillas.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <strong>Ubicación ideal:</strong> Coloca la maceta donde reciba <strong>luz indirecta</strong>, evitando el sol directo intenso que podría secar la tierra.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">7</div>
+                    <div class="step-content">
+                        <strong>Mantén húmedo:</strong> <strong>Siempre mantén la tierra húmeda</strong> - esencial para que la semilla germine y el brote rompa la cáscara.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">8</div>
+                    <div class="step-content">
+                        <strong>Espera 10 días:</strong> Después de diez días, habrán surgido múltiples plantas. Es hora de trasplantarlas a su propia maceta con espacio suficiente.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                💡 <strong>Recuerda:</strong> Si omites algún paso clave (como la luz indirecta o mantener la humedad), el cultivo puede fallar. ¡Cada detalle cuenta para que tus tomates crezcan fuertes!
+            </div>
+            
+            <button class="start-btn" onclick="startGame()">
+                🎮 Comenzar Juego (Enter)
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE VICTORIA -->
+    <div id="victoryScreen">
+        <div class="victory-card">
+            <div class="victory-icon">🍅🏆</div>
+            <div class="victory-title">¡COSECHA PERFECTA!</div>
+            <div id="winnerDisplay" class="winner-name"></div>
+            <div class="victory-message">
+                ¡Llegaste primero a la META!<br>
+                Eres un experto en el cultivo de tomates.
+            </div>
+            <button class="restart-btn" onclick="location.reload()">
+                🔄 Cultivar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <!-- JUEGO -->
+    <div id="gameScreen">
+        <div class="game-header">
+            <h1 class="game-title">🍅 Carrera del Cultivo - 20 Pasos</h1>
+            <div id="turnDisplay" class="turn-badge p1">
+                Turno: Cultivador 1
+            </div>
+        </div>
+
+        <div class="game-layout">
+            <!-- Panel Jugador 1 -->
+            <div class="player-panel p1 active" id="panel-1">
+                <div class="big-token p1">🌱</div>
+                <div class="panel-title p1">Cultivador 1</div>
+                <div class="player-status">
+                    🍅 Tomate Verde (Planta)<br>
+                    <span id="pos-1">En inicio</span><br>
+                    <small style="color: #4caf50; font-size: 0.8em;">Meta: Cosecha Final</small>
+                </div>
+            </div>
+
+            <!-- Tablero Central -->
+            <div class="board-wrapper">
+                <div class="board" id="board">
+                    <!-- Generado por JS -->
+                </div>
+            </div>
+
+            <!-- Panel Jugador 2 -->
+            <div class="player-panel p2" id="panel-2">
+                <div class="big-token p2">🍅</div>
+                <div class="panel-title p2">Cultivador 2</div>
+                <div class="player-status">
+                    🍅 Tomate Rojo (Fruto)<br>
+                    <span id="pos-2">En inicio</span><br>
+                    <small style="color: #f44336; font-size: 0.8em;">Meta: Cosecha Final</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PREGUNTAS -->
+    <div id="questionModal" class="modal">
+        <div class="modal-card">
+            <h2 class="modal-title">🧠 Demuestra tu conocimiento</h2>
+            <div class="question-box" id="questionText"></div>
+            <div class="options-grid" id="optionsBox"></div>
+            <div id="feedbackBox" class="feedback"></div>
+            <button id="continueBtn" class="continue-btn" onclick="processAnswer()">Continuar</button>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toasts"></div>
+
+    <script>
+        // PREGUNTAS DEL CUESTIONARIO SOBRE CULTIVO DE TOMATE
+        const questions = [
+            {
+                q: "¿Cuál es la razón lógica para colocar las rodajas de tomate 'separadas la una de la otra' en la maceta?",
+                options: [
+                    { letter: "A", text: "Para evitar que el sabor de un tomate se mezcle con el del otro.", correct: false },
+                    { letter: "B", text: "Para que cada futuro brote tenga espacio suficiente para crecer sin competir por nutrientes.", correct: true },
+                    { letter: "C", text: "Para que sea más fácil cubrirlas con exactamente medio centímetro de tierra.", correct: false },
+                    { letter: "D", text: "Para que el atomizador pueda mojar solo las semillas y no la rodaja completa.", correct: false }
+                ],
+                explanation: "La separación permite que cada planta tenga su propio espacio y recursos para desarrollarse correctamente."
+            },
+            {
+                q: "¿Qué se puede deducir sobre la fragilidad de las semillas a partir de la instrucción de usar un 'atomizador'?",
+                options: [
+                    { letter: "A", text: "Que las semillas de tomate son impermeables a grandes cantidades de agua.", correct: false },
+                    { letter: "B", text: "Que un chorro de agua muy fuerte podría enterrar demasiado las semillas o desplazarlas de su lugar.", correct: true },
+                    { letter: "C", text: "Que el atomizador ayuda a que el agua se convierta en nutrientes químicos.", correct: false },
+                    { letter: "D", text: "Que las semillas solo germinan si el agua cae en forma de vapor.", correct: false }
+                ],
+                explanation: "El atomizador proporciona una lluvia suave que no daña ni desplaza las semillas delicadas."
+            },
+            {
+                q: "Si el texto especifica que la maceta debe ser 'profunda', ¿qué característica se infiere sobre la planta de tomate?",
+                options: [
+                    { letter: "A", text: "Que es una planta que necesita mucha oscuridad en sus raíces para dar frutos rojos.", correct: false },
+                    { letter: "B", text: "Que su sistema de raíces es extenso y requiere espacio vertical para sostener el peso de la planta.", correct: true },
+                    { letter: "C", text: "Que el tomate crece hacia abajo antes de salir a la superficie de la tierra.", correct: false },
+                    { letter: "D", text: "Que la tierra en el fondo de la maceta se mantiene más caliente que en la superficie.", correct: false }
+                ],
+                explanation: "Las plantas de tomate desarrollan raíces profundas que necesitan espacio para anclarse y absorber nutrientes."
+            },
+            {
+                q: "¿Por qué el autor indica que la maceta debe estar en una zona donde 'no reciba el sol de manera directa'?",
+                options: [
+                    { letter: "A", text: "Porque los tomates crecen mejor en la oscuridad total del jardín.", correct: false },
+                    { letter: "B", text: "Porque el calor intenso y directo del sol podría secar la humedad necesaria o quemar los brotes nuevos.", correct: true },
+                    { letter: "C", text: "Porque la luz solar cambia el color de la tierra e impide la germinación.", correct: false },
+                    { letter: "D", text: "Porque el sol directo atrae insectos que se comen las rodajas de tomate.", correct: false }
+                ],
+                explanation: "El sol directo evapora rápidamente el agua que las semillas necesitan para germinar y puede dañar los brotes tiernos."
+            },
+            {
+                q: "¿Qué importancia tiene 'siempre mantener la tierra húmeda' según la lógica del ciclo de vida de la planta?",
+                options: [
+                    { letter: "A", text: "Sirve para que la maceta no se agriete con el paso de los días.", correct: false },
+                    { letter: "B", text: "Es la condición necesaria para activar la semilla y permitir que el brote rompa la cáscara.", correct: true },
+                    { letter: "C", text: "La humedad constante evita que el tomate se pudra antes de los diez días.", correct: false },
+                    { letter: "D", text: "El agua constante reemplaza la necesidad de usar tierra de buena calidad.", correct: false }
+                ],
+                explanation: "La humedad es el detonante biológico que activa el proceso de germinación y permite que el brote emerja."
+            },
+            {
+                q: "A partir del paso 6, ¿qué se puede concluir sobre el crecimiento de las semillas tras diez días?",
+                options: [
+                    { letter: "A", text: "Que las plantas mueren si se dejan juntas más de una semana.", correct: false },
+                    { letter: "B", text: "Que habrán surgido múltiples plantas de una sola rodaja y necesitan su propio espacio para desarrollarse.", correct: true },
+                    { letter: "C", text: "Que el tomate ya está listo para ser cosechado y consumido en casa.", correct: false },
+                    { letter: "D", text: "Que las rodajas de tomate desaparecen y se convierten en abono líquido.", correct: false }
+                ],
+                explanation: "Cada rodaja contiene múltiples semillas, por lo que surgen varias plantas que compiten por espacio y deben separarse."
+            },
+            {
+                q: "En el caso de Ana (quien no vio crecimiento por falta de luz indirecta), ¿qué se infiere sobre el éxito del cultivo?",
+                options: [
+                    { letter: "A", text: "Que el agua es el único factor realmente importante para que una planta crezca.", correct: false },
+                    { letter: "B", text: "Que omitir un solo paso del proceso, como la ubicación de la luz, puede invalidar todo el esfuerzo anterior.", correct: true },
+                    { letter: "C", text: "Que Ana debió usar rodajas de un centímetro en lugar de medio centímetro.", correct: false },
+                    { letter: "D", text: "Que las plantas de tomate no crecen si se plantan en macetas profundas.", correct: false }
+                ],
+                explanation: "El cultivo de tomate requiere condiciones específicas; omitir una sola puede hacer fracasar todo el proceso."
+            },
+            {
+                q: "¿Qué se deduce sobre el grosor de 'medio centímetro' sugerido para las rodajas?",
+                options: [
+                    { letter: "A", text: "Que es un equilibrio para que la semilla tenga energía suficiente para llegar a la superficie de la tierra.", correct: true },
+                    { letter: "B", text: "Que es el tamaño exacto que tiene el estómago de los insectos que atacan el nido.", correct: false },
+                    { letter: "C", text: "Que un grosor mayor impediría que la tierra cubra la rodaja totalmente.", correct: false },
+                    { letter: "D", text: "Que las rodajas delgadas permiten que las semillas respiren el aire del exterior.", correct: false }
+                ],
+                explanation: "El grosor de 0.5cm permite que la semilla germine y tenga fuerza para empujar hacia la superficie sin quedarse sin nutrientes."
+            },
+            {
+                q: "¿Cuál es el propósito implícito de incluir imágenes junto a cada instrucción numerada?",
+                options: [
+                    { letter: "A", text: "Mostrar que el proceso es tan difícil que requiere fotos para no fallar.", correct: false },
+                    { letter: "B", text: "Facilitar la comprensión paso a paso y asegurar que el lector visualice la acción correcta.", correct: true },
+                    { letter: "C", text: "Decorar el texto para que las personas que no saben leer puedan cultivar.", correct: false },
+                    { letter: "D", text: "Indicar el color exacto que debe tener la tierra y la maceta en cada fase.", correct: false }
+                ],
+                explanation: "Las imágenes sirven como guía visual complementaria para entender mejor cada etapa del proceso de cultivo."
+            }
+        ];
+
+        // ESTADO DEL JUEGO (20 CASILLAS)
+        let state = {
+            currentPlayer: 1,
+            players: {
+                1: { name: "Cultivador 1", pos: -1, color: "#4caf50", class: "p1", emoji: "🌱" },
+                2: { name: "Cultivador 2", pos: -1, color: "#f44336", class: "p2", emoji: "🍅" }
+            },
+            dice: [0, 0],
+            canRoll: true,
+            lastQuestion: null,
+            lastAnswerCorrect: false,
+            isMoving: false,
+            gameOver: false
+        };
+
+        // MAPA DE 20 CASILLAS (0-19, 19=META)
+        const pathMap = {
+            1: [
+                [1,6], [2,6], [3,6], [4,6], [5,6],  // 0-4
+                [6,6], [6,7], [6,8], [6,9], [6,10], // 5-9
+                [7,10], [8,10], [9,10],             // 10-12
+                [9,9], [9,8], [9,7], [9,6], [9,5],  // 13-17
+                [8,5], [7,5]                        // 18-19 (META)
+            ],
+            2: [
+                [13,8], [12,8], [11,8], [10,8], [9,8], // 0-4
+                [8,8], [8,7], [8,6], [8,5], [8,4],     // 5-9
+                [7,4], [6,4], [5,4],                    // 10-12
+                [5,5], [5,6], [5,7], [5,8], [5,9],     // 13-17
+                [6,9], [7,9]                            // 18-19 (META)
+            ]
+        };
+
+        const SAFE_CELLS = [5, 10, 15];
+        const META_INDEX = 19;
+
+        function initBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (let r = 1; r <= 13; r++) {
+                for (let c = 1; c <= 13; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${r}-${c}`;
+                    
+                    if (isStartZone(r, c)) {
+                        continue;
+                    } else if (isPath(r, c)) {
+                        cell.classList.add('path');
+                        const owner = getPathOwner(r, c);
+                        if (owner) cell.classList.add(owner);
+                        
+                        const idx = getPathIndex(r, c);
+                        
+                        if (isMetaCell(r, c)) {
+                            cell.classList.add('meta-cell');
+                            cell.innerHTML = '<div class="meta-text">META</div>';
+                        } else if (idx !== -1 && SAFE_CELLS.includes(idx)) {
+                            cell.classList.add('safe');
+                        }
+                    } else if (r >= 6 && r <= 7 && c >= 6 && c <= 7) {
+                        cell.style.background = 'transparent';
+                        cell.style.border = 'none';
+                    } else {
+                        cell.style.visibility = 'hidden';
+                    }
+                    
+                    board.appendChild(cell);
+                }
+            }
+
+            createStartZones();
+            createDiceCenter();
+            updateTokens();
+        }
+
+        function isStartZone(r, c) {
+            return (r <= 4 && c <= 4) || (r >= 10 && c >= 10);
+        }
+
+        function isPath(r, c) {
+            const inPath1 = pathMap[1].some(coord => coord[0] === r && coord[1] === c);
+            const inPath2 = pathMap[2].some(coord => coord[0] === r && coord[1] === c);
+            return inPath1 || inPath2;
+        }
+
+        function isMetaCell(r, c) {
+            const meta1 = pathMap[1][META_INDEX];
+            const meta2 = pathMap[2][META_INDEX];
+            
+            return (r === meta1[0] && c === meta1[1]) || 
+                   (r === meta2[0] && c === meta2[1]);
+        }
+
+        function getPathOwner(r, c) {
+            const idx1 = pathMap[1].findIndex(coord => coord[0] === r && coord[1] === c);
+            const idx2 = pathMap[2].findIndex(coord => coord[0] === r && coord[1] === c);
+            
+            if (idx1 !== -1 && idx2 !== -1) return 'neutral';
+            if (idx1 !== -1) return 'p1';
+            if (idx2 !== -1) return 'p2';
+            return null;
+        }
+
+        function getPathIndex(r, c) {
+            return pathMap[1].findIndex(coord => coord[0] === r && coord[1] === c);
+        }
+
+        function createStartZones() {
+            const board = document.getElementById('board');
+            
+            const z1 = document.createElement('div');
+            z1.className = 'start-zone p1';
+            z1.innerHTML = '<div style="text-align:center;">SEMILLA<br>🌱<br>J1</div>';
+            board.appendChild(z1);
+            
+            const z2 = document.createElement('div');
+            z2.className = 'start-zone p2';
+            z2.innerHTML = '<div style="text-align:center;">SEMILLA<br>🍅<br>J2</div>';
+            board.appendChild(z2);
+        }
+
+        function createDiceCenter() {
+            const board = document.getElementById('board');
+            const center = document.createElement('div');
+            center.className = 'center-area';
+            center.innerHTML = `
+                <div class="dice-box">
+                    <div class="die" id="die1">?</div>
+                    <div class="die" id="die2">?</div>
+                </div>
+                <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 Lanzar</button>
+                <div class="dice-total">Total: <span id="diceTotal">0</span></div>
+            `;
+            board.appendChild(center);
+        }
+
+        function createToken(p) {
+            const t = document.createElement('div');
+            t.className = `token p${p}`;
+            t.textContent = state.players[p].emoji;
+            return t;
+        }
+
+        function updateTokens() {
+            document.querySelectorAll('.token').forEach(t => t.remove());
+            
+            for (let p = 1; p <= 2; p++) {
+                const player = state.players[p];
+                const map = pathMap[p];
+                
+                if (player.pos === -1) {
+                    const zone = document.querySelector(`.start-zone.p${p}`);
+                    const token = createToken(p);
+                    token.style.position = 'relative';
+                    token.style.transform = 'none';
+                    token.style.margin = '0 auto';
+                    zone.appendChild(token);
+                } else if (player.pos <= META_INDEX) {
+                    const [r, c] = map[player.pos];
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (cell) {
+                        const token = createToken(p);
+                        if (player.pos === META_INDEX) {
+                            token.style.width = '42px';
+                            token.style.height = '42px';
+                            token.style.zIndex = '20';
+                            token.style.border = '4px solid #ffd700';
+                            token.style.boxShadow = '0 0 20px rgba(255,215,0,0.8)';
+                        }
+                        cell.appendChild(token);
+                    }
+                }
+            }
+            
+            for (let p = 1; p <= 2; p++) {
+                const pos = state.players[p].pos;
+                let text = "";
+                if (pos === -1) text = "Etapa: Semilla";
+                else if (pos === META_INDEX) text = "🏁 ¡COSECHA LISTA!";
+                else if (pos < 5) text = `Etapa ${pos + 1}/20: Germinación`;
+                else if (pos < 10) text = `Etapa ${pos + 1}/20: Brote`;
+                else if (pos < 15) text = `Etapa ${pos + 1}/20: Crecimiento`;
+                else text = `Etapa ${pos + 1}/20: Maduración`;
+                
+                document.getElementById(`pos-${p}`).innerHTML = text;
+            }
+        }
+
+        function startGame() {
+            document.getElementById('readingScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            initBoard();
+            showToast("🍅 ¡Carrera de Cultivo! ¿Quién cosechará primero? 🏁");
+        }
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('readingScreen').style.display !== 'none') {
+                startGame();
+            }
+        });
+
+        function rollDice() {
+            if (!state.canRoll || state.isMoving || state.gameOver) return;
+            
+            state.canRoll = false;
+            document.getElementById('rollBtn').disabled = true;
+            
+            const d1 = document.getElementById('die1');
+            const d2 = document.getElementById('die2');
+            
+            let rolls = 0;
+            const interval = setInterval(() => {
+                d1.textContent = Math.floor(Math.random() * 6) + 1;
+                d2.textContent = Math.floor(Math.random() * 6) + 1;
+                d1.classList.add('rolling');
+                d2.classList.add('rolling');
+                rolls++;
+                
+                if (rolls >= 10) {
+                    clearInterval(interval);
+                    const v1 = Math.floor(Math.random() * 6) + 1;
+                    const v2 = Math.floor(Math.random() * 6) + 1;
+                    state.dice = [v1, v2];
+                    
+                    d1.textContent = v1;
+                    d2.textContent = v2;
+                    d1.classList.remove('rolling');
+                    d2.classList.remove('rolling');
+                    
+                    document.getElementById('diceTotal').textContent = v1 + v2;
+                    setTimeout(showQuestion, 400);
+                }
+            }, 80);
+        }
+
+        function showQuestion() {
+            if (state.gameOver) return;
+            
+            const q = questions[Math.floor(Math.random() * questions.length)];
+            state.lastQuestion = q;
+            
+            document.getElementById('questionText').textContent = q.q;
+            const opts = document.getElementById('optionsBox');
+            opts.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="option-letter">${opt.letter}</span> ${opt.text}`;
+                btn.onclick = () => answer(opt.correct, btn);
+                opts.appendChild(btn);
+            });
+            
+            document.getElementById('feedbackBox').className = 'feedback';
+            document.getElementById('continueBtn').className = 'continue-btn';
+            document.getElementById('questionModal').style.display = 'flex';
+        }
+
+        function answer(isCorrect, btn) {
+            document.querySelectorAll('.option-btn').forEach(b => {
+                b.classList.add('disabled');
+                b.onclick = null;
+            });
+            
+            btn.classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            const fb = document.getElementById('feedbackBox');
+            fb.innerHTML = isCorrect ? 
+                `<b>¡Correcto!</b> ${state.lastQuestion.explanation}` : 
+                `<b>Incorrecto.</b> ${state.lastQuestion.explanation}`;
+            fb.className = `feedback show ${isCorrect ? 'success' : 'error'}`;
+            
+            state.lastAnswerCorrect = isCorrect;
+            document.getElementById('continueBtn').classList.add('show');
+        }
+
+        function processAnswer() {
+            document.getElementById('questionModal').style.display = 'none';
+            
+            if (state.lastAnswerCorrect) {
+                const steps = state.dice[0] + state.dice[1];
+                movePlayer(steps);
+            } else {
+                showToast("❌ Incorrecto. Pierdes el turno.");
+                setTimeout(switchTurn, 1500);
+            }
+        }
+
+        async function movePlayer(steps) {
+            if (state.gameOver) return;
+            
+            state.isMoving = true;
+            const player = state.players[state.currentPlayer];
+            const startPos = player.pos === -1 ? 0 : player.pos;
+            
+            showToast(`🍅 Avanzando ${steps} pasos hacia la cosecha...`);
+            
+            for (let i = 1; i <= steps; i++) {
+                const newPos = startPos + i;
+                
+                if (newPos >= META_INDEX) {
+                    player.pos = META_INDEX;
+                    updateTokens();
+                    showToast(`🏁 ¡${player.name} HA COSECHADO!`);
+                    setTimeout(() => declareWinner(state.currentPlayer), 800);
+                    return;
+                }
+                
+                player.pos = newPos;
+                updateTokens();
+                
+                const token = document.querySelector(`.token.p${state.currentPlayer}`);
+                if (token) {
+                    token.classList.add('moving');
+                    setTimeout(() => token.classList.remove('moving'), 300);
+                }
+                
+                await sleep(400);
+            }
+            
+            if (SAFE_CELLS.includes(player.pos)) {
+                showToast("🍃 ¡Casilla seguro! Riego extra - Turno adicional.");
+                state.canRoll = true;
+                document.getElementById('rollBtn').disabled = false;
+                state.isMoving = false;
+                return;
+            }
+            
+            state.isMoving = false;
+            if (!state.gameOver) {
+                setTimeout(switchTurn, 800);
+            }
+        }
+
+        function declareWinner(playerNum) {
+            state.gameOver = true;
+            
+            for (let i = 0; i < 50; i++) {
+                createConfetti();
+            }
+            
+            const winner = state.players[playerNum];
+            const winnerDisplay = document.getElementById('winnerDisplay');
+            winnerDisplay.textContent = winner.name;
+            winnerDisplay.className = `winner-name p${playerNum}`;
+            
+            document.getElementById('victoryScreen').style.display = 'flex';
+            document.getElementById(`panel-${playerNum}`).classList.add('winner');
+            
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = true;
+            rollBtn.textContent = "🍅 Cosecha Completa";
+        }
+
+        function createConfetti() {
+            const colors = ['#4caf50', '#f44336', '#ff9800', '#ffeb3b', '#8bc34a', '#ff5722'];
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+            document.getElementById('victoryScreen').appendChild(confetti);
+            setTimeout(() => confetti.remove(), 4000);
+        }
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function switchTurn() {
+            if (state.gameOver) return;
+            
+            state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+            
+            document.querySelectorAll('.player-panel').forEach((el, i) => {
+                el.classList.toggle('active', i + 1 === state.currentPlayer);
+            });
+            
+            const p = state.players[state.currentPlayer];
+            const badge = document.getElementById('turnDisplay');
+            badge.className = `turn-badge p${state.currentPlayer}`;
+            badge.textContent = `Turno: ${p.name}`;
+            
+            document.getElementById('die1').textContent = '?';
+            document.getElementById('die2').textContent = '?';
+            document.getElementById('diceTotal').textContent = '0';
+            
+            state.canRoll = true;
+            if (!state.gameOver) {
+                document.getElementById('rollBtn').disabled = false;
+            }
+            
+            showToast(`🎯 Turno de ${p.name}`);
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toasts');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
